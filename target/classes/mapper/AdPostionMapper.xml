@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ted.mapper.AdPositionMapper">
+    <!-- resultMap最终还是要将结果映射到pojo上，type就是指定映射到哪一个pojo -->
+    <!-- id：设置ResultMap的id -->
+    <resultMap id="AdPositionMap" type="com.ted.entity.AdPosition">
+        <!-- 定义主键 ,非常重要。如果是多个字段,则定义多个id -->
+        <!-- property：主键在pojo中的属性名 -->
+        <!-- column：主键在数据库中的列名 -->
+        <id property="positionId" column="position_id"/>
+
+        <!-- 定义普通属性 -->
+        <result property="title" column="title"/>
+        <result property="width" column="width"/>
+        <result property="height" column="height"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        position_id,
+        title,
+        width,
+        height,
+        create_time,
+        update_time
+    </sql>
+
+    <select id="getAdPosition" resultMap="AdPositionMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_ad_position`
+        WHERE `position_id` = #{positionId}
+    </select>
+    <select id="listAdPosition" resultMap="AdPositionMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_ad_position`
+        WHERE 1
+        <if test="keywords!=null and keywords!=''">
+            AND (`title` LIKE CONCAT('%', #{keywords}, '%'))
+        </if>
+        <if test="beginTime!=null and endTime!=null and beginTime!='' and endTime!=''">
+            AND (`create_time` <![CDATA[ >= ]]> #{beginTime} AND `create_time` <![CDATA[ <= ]]> #{endTime})
+        </if>
+        <choose>
+            <when test="orderBy!=null and orderBy!=''">
+                ORDER BY ${orderBy}
+            </when>
+            <otherwise>
+                ORDER BY `position_id` DESC, `create_time` DESC
+            </otherwise>
+        </choose>
+    </select>
+    <delete id="deleteAdPosition" parameterType="java.lang.Long">
+        DELETE
+        FROM `ted_ad_position`
+        WHERE `position_id` = #{positionId}
+    </delete>
+    <delete id="deleteBatchAdPosition" parameterType="java.lang.String">
+        DELETE
+        FROM `ted_ad_position`
+        WHERE `position_id` IN
+        <foreach collection="array" item="positionId" open="(" separator="," close=")">
+            #{positionId}
+        </foreach>
+    </delete>
+    <!-- 新增 -->
+    <insert id="insertAdPosition" parameterType="com.ted.entity.AdPosition">
+        INSERT INTO
+        `ted_ad_position`
+        (`title`,
+        `width`,
+        `height`,
+        `create_time`
+        )
+        VALUES
+        (#{title},
+        #{width},
+        #{height},
+        #{createTime}
+        )
+        <selectKey resultType="java.lang.Long" keyProperty="positionId" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+    <!-- 修改 -->
+    <update id="updateAdPosition" parameterType="com.ted.entity.AdPosition">
+        UPDATE
+        `ted_ad_position`
+        <set>
+            <if test="title!=null">`title` = #{title},</if>
+            <if test="width!=null">`width` = #{width},</if>
+            <if test="height!=null">`height` = #{height},</if>
+            <if test="createTime!=null">`create_time` = #{createTime}</if>
+        </set>
+        WHERE `position_id` = #{positionId}
+    </update>
+</mapper>

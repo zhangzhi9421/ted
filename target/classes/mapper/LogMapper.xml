@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ted.mapper.LogMapper">
+    <!-- resultMap最终还是要将结果映射到pojo上，type就是指定映射到哪一个pojo -->
+    <!-- id：设置ResultMap的id -->
+    <resultMap id="LogMap" type="com.ted.entity.Log">
+        <!-- 定义主键 ,非常重要。如果是多个字段,则定义多个id -->
+        <!-- property：主键在pojo中的属性名 -->
+        <!-- column：主键在数据库中的列名 -->
+        <id property="id" column="id"/>
+
+        <!-- 定义普通属性 -->
+        <result property="uid" column="uid"/>
+        <result property="username" column="username"/>
+        <result property="module" column="module"/>
+        <result property="type" column="type"/>
+        <result property="description" column="description"/>
+        <result property="params" column="params"/>
+        <result property="method" column="method"/>
+        <result property="uri" column="uri"/>
+        <result property="ip" column="ip"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,
+        uid,
+        username,
+        module,
+        type,
+        description,
+        params,
+        method,
+        uri,
+        ip,
+        create_time
+    </sql>
+
+    <select id="getLog" resultMap="LogMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_log`
+        WHERE `id` = #{id}
+    </select>
+    <select id="listLog" resultMap="LogMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_log`
+        <where>
+            <if test="uid!=null and uid!=''">
+                AND `uid` = #{uid}
+            </if>
+            <if test="module!=null and module!=''">
+                AND `module` = #{module}
+            </if>
+            <if test="type!=null and type!=''">
+                AND `type` = #{type}
+            </if>
+            <if test="keywords!=null and keywords!=''">
+                AND (`description` LIKE CONCAT('%', #{keywords}, '%'))
+            </if>
+            <if test="beginTime!=null and endTime!=null and beginTime!='' and endTime!=''">
+                AND (`create_time` <![CDATA[ >= ]]> #{beginTime} AND `create_time` <![CDATA[ <= ]]> #{endTime})
+            </if>
+        </where>
+        <choose>
+            <when test="orderBy!=null and orderBy!=''">
+                ORDER BY ${orderBy}
+            </when>
+            <otherwise>
+                ORDER BY `id` DESC, `create_time` DESC
+            </otherwise>
+        </choose>
+    </select>
+    <delete id="deleteLog" parameterType="java.math.BigInteger">
+        DELETE
+        FROM `ted_log`
+        WHERE `id` = #{id}
+    </delete>
+    <delete id="deleteBatchLog" parameterType="java.lang.String">
+        DELETE
+        FROM `ted_log`
+        WHERE `id` IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <!-- 新增 -->
+    <insert id="insertLog" parameterType="com.ted.entity.Log">
+        INSERT INTO
+        `ted_log`
+        (
+        `uid`,
+        `username`,
+        `module`,
+        `type`,
+        `description`,
+        `params`,
+        `method`,
+        `uri`,
+        `ip`,
+        `create_time`
+        )
+        VALUES
+        (#{uid},
+        #{username},
+        #{module},
+        #{type},
+        #{description},
+        #{params},
+        #{method},
+        #{uri},
+        #{ip},
+        #{createTime}
+        )
+        <selectKey resultType="java.math.BigInteger" keyProperty="id" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+</mapper>

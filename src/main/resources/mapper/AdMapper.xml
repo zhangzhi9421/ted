@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ted.mapper.AdMapper">
+    <!-- resultMap最终还是要将结果映射到pojo上，type就是指定映射到哪一个pojo -->
+    <!-- id：设置ResultMap的id -->
+    <resultMap id="AdMap" type="com.ted.entity.Ad">
+        <!-- 定义主键 ,非常重要。如果是多个字段,则定义多个id -->
+        <!-- property：主键在pojo中的属性名 -->
+        <!-- column：主键在数据库中的列名 -->
+        <id property="adId" column="ad_id"/>
+
+        <!-- 定义普通属性 -->
+        <result property="positionId" column="position_id"/>
+        <result property="title" column="title"/>
+        <result property="photo" column="photo"/>
+        <result property="description" column="description"/>
+        <result property="uri" column="uri"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="sort" column="sort"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+
+        <association property="adPosition" javaType="com.ted.entity.AdPosition">
+            <id property="positionId" column="position_id"/>
+            <result property="title" column="positionName"/>
+        </association>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        ad.ad_id,
+        ad.position_id,
+        ad.title,
+        ad.photo,
+        ad.description,
+        ad.uri,
+        ad.start_time,
+        ad.end_time,
+        ad.sort,
+        ad.status,
+        ad.create_time,
+        ad.update_time
+    </sql>
+
+    <sql id="Association_Position_Column_List">
+        ad.ad_id,
+        ad.position_id,
+        ad.title,
+        ad.photo,
+        ad.description,
+        ad.uri,
+        ad.start_time,
+        ad.end_time,
+        ad.sort,
+        ad.status,
+        ad.create_time,
+        ad.update_time,
+        position.position_id AS positionId,
+        position.title AS positionName
+    </sql>
+
+    <select id="getAd" resultMap="AdMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_ad` AS `ad`
+        WHERE `ad`.`ad_id` = #{adId}
+    </select>
+    <select id="listAdAssociationPosition" resultMap="AdMap">
+        SELECT
+        <include refid="Association_Position_Column_List"/>
+        FROM `ted_ad` AS `ad`
+        LEFT JOIN `ted_ad_position` AS `position` on ad.position_id = position.position_id
+        WHERE 1
+        <if test="positionId!=null and positionId!=''">
+            AND `ad`.`position_id` = #{positionId}
+        </if>
+        <if test="status!=null">
+            <if test="status==1">
+                AND `ad`.`status` = 1
+            </if>
+            <if test="status==10">
+                AND `ad`.`status` = 0
+            </if>
+        </if>
+        <if test="keywords!=null and keywords!=''">
+            AND (`ad`.`title` LIKE CONCAT('%', #{keywords}, '%'))
+        </if>
+        <if test="beginTime!=null and endTime!=null and beginTime!='' and endTime!=''">
+            AND (`ad`.`create_time` <![CDATA[ >= ]]> #{beginTime} AND `ad`.`create_time` <![CDATA[ <= ]]> #{endTime})
+        </if>
+        <choose>
+            <when test="orderBy!=null and orderBy!=''">
+                ORDER BY ${orderBy}
+            </when>
+            <otherwise>
+                ORDER BY `ad`.`ad_id` DESC, `ad`.`create_time` DESC
+            </otherwise>
+        </choose>
+    </select>
+    <select id="listAd" resultMap="AdMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_ad` AS `ad`
+        WHERE 1
+        <if test="positionId!=null and positionId!=''">
+            AND `ad`.`position_id` = #{positionId}
+        </if>
+        <if test="status!=null">
+            <if test="status==1">
+                AND `ad`.`status` = 1
+            </if>
+            <if test="status==10">
+                AND `ad`.`status` = 0
+            </if>
+        </if>
+        <if test="keywords!=null and keywords!=''">
+            AND (`ad`.`title` LIKE CONCAT('%', #{keywords}, '%'))
+        </if>
+        <if test="beginTime!=null and endTime!=null and beginTime!='' and endTime!=''">
+            AND (`ad`.`create_time` <![CDATA[ >= ]]> #{beginTime} AND `ad`.`create_time` <![CDATA[ <= ]]> #{endTime})
+        </if>
+        <choose>
+            <when test="orderBy!=null and orderBy!=''">
+                ORDER BY ${orderBy}
+            </when>
+            <otherwise>
+                ORDER BY `ad`.`ad_id` DESC, `ad`.`create_time` DESC
+            </otherwise>
+        </choose>
+    </select>
+    <delete id="deleteAd" parameterType="java.lang.Long">
+        DELETE
+        FROM `ted_ad`
+        WHERE `ad_id` = #{adId}
+    </delete>
+    <delete id="deleteBatchAd" parameterType="java.lang.String">
+        DELETE
+        FROM `ted_ad`
+        WHERE `ad_id` IN
+        <foreach collection="array" item="adId" open="(" separator="," close=")">
+            #{adId}
+        </foreach>
+    </delete>
+    <!-- 新增 -->
+    <insert id="insertAd" parameterType="com.ted.entity.Ad">
+        INSERT INTO
+        `ted_ad`
+        (`position_id`,
+        `title`,
+        `photo`,
+        `description`,
+        `uri`,
+        `start_time`,
+        `end_time`,
+        `sort`,
+        `status`,
+        `create_time`
+        )
+        VALUES
+        (#{positionId},
+        #{title},
+        #{photo},
+        #{description},
+        #{uri},
+        #{startTime},
+        #{endTime},
+        #{sort},
+        #{status},
+        #{createTime}
+        )
+        <selectKey resultType="java.lang.Long" keyProperty="adId" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+    <!-- 修改 -->
+    <update id="updateAd" parameterType="com.ted.entity.Ad">
+        UPDATE
+        `ted_ad`
+        <set>
+            <if test="positionId!=null">`position_id` = #{positionId},</if>
+            <if test="title!=null">`title` = #{title},</if>
+            <if test="photo!=null">`photo` = #{photo},</if>
+            <if test="description!=null">`description` = #{description},</if>
+            <if test="uri!=null">`uri` = #{uri},</if>
+            <if test="startTime!=null">`start_time` = #{startTime},</if>
+            <if test="endTime!=null">`end_time` = #{endTime},</if>
+            <if test="sort!=null">`sort` = #{sort},</if>
+            <if test="status!=null">`status` = #{status},</if>
+            <if test="createTime!=null">`create_time` = #{createTime}</if>
+        </set>
+        WHERE `ad_id` = #{adId}
+    </update>
+</mapper>

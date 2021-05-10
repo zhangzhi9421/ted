@@ -1,0 +1,92 @@
+{
+  "groups": [
+    {
+      "name": "date",
+      "type": "com.ted.constant.DateConstant",
+      "sourceType": "com.ted.constant.DateConstant"
+    },
+    {
+      "name": "language",
+      "type": "com.ted.constant.LanguageConstant",
+      "sourceType": "com.ted.constant.LanguageConstant"
+    },
+    {
+      "name": "upload",
+      "type": "com.ted.constant.UploadConstant",
+      "sourceType": "com.ted.constant.UploadConstant"
+    }
+  ],
+  "properties": [
+    {
+      "name": "date.pattern-end-of-day",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.DateConstant"
+    },
+    {
+      "name": "date.pattern-ymd",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.DateConstant"
+    },
+    {
+      "name": "date.pattern-ymd-his",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.DateConstant"
+    },
+    {
+      "name": "language.data-null",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.LanguageConstant"
+    },
+    {
+      "name": "language.duplicated",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.LanguageConstant"
+    },
+    {
+      "name": "language.fail",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.LanguageConstant"
+    },
+    {
+      "name": "language.success",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.LanguageConstant"
+    },
+    {
+      "name": "language.unfounded",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.LanguageConstant"
+    },
+    {
+      "name": "language.unknown",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.LanguageConstant"
+    },
+    {
+      "name": "upload.dir",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.UploadConstant"
+    },
+    {
+      "name": "upload.type-file",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.UploadConstant"
+    },
+    {
+      "name": "upload.type-image",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.UploadConstant"
+    },
+    {
+      "name": "upload.upload-dir",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.UploadConstant"
+    },
+    {
+      "name": "upload.upload-path",
+      "type": "java.lang.String",
+      "sourceType": "com.ted.constant.UploadConstant"
+    }
+  ],
+  "hints": []
+}

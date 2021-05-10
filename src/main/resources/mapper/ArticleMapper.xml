@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ted.mapper.ArticleMapper">
+    <!-- resultMap最终还是要将结果映射到pojo上，type就是指定映射到哪一个pojo -->
+    <!-- id：设置ResultMap的id -->
+    <resultMap id="ArticleMap" type="com.ted.entity.Article">
+        <!-- 定义主键 ,非常重要。如果是多个字段,则定义多个id -->
+        <!-- property：主键在pojo中的属性名 -->
+        <!-- column：主键在数据库中的列名 -->
+        <id property="aid" column="aid"/>
+
+        <!-- 定义普通属性 -->
+        <result property="categoryId" column="category_id"/>
+        <result property="articleTitle" column="article_title"/>
+        <result property="subtitle" column="subtitle"/>
+        <result property="summary" column="summary"/>
+        <result property="keywords" column="keywords"/>
+        <result property="recommend" column="recommend"/>
+        <result property="photo" column="photo"/>
+        <result property="source" column="source"/>
+        <result property="author" column="author"/>
+        <result property="hits" column="hits"/>
+        <result property="status" column="status"/>
+        <result property="sort" column="sort"/>
+        <result property="seoTitle" column="seo_title"/>
+        <result property="seoKeywords" column="seo_keywords"/>
+        <result property="seoDescription" column="seo_description"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        aid,
+        category_id,
+        article_title,
+        subtitle,
+        summary,
+        recommend,
+        photo,
+        hits,
+        status,
+        sort,
+        create_time,
+        update_time
+    </sql>
+
+    <sql id="All_Column_List">
+        aid,
+        category_id,
+        article_title,
+        subtitle,
+        summary,
+        keywords,
+        recommend,
+        photo,
+        source,
+        author,
+        hits,
+        status,
+        sort,
+        seo_title,
+        seo_keywords,
+        seo_description,
+        create_time,
+        update_time
+    </sql>
+
+    <select id="getArticle" resultMap="ArticleMap">
+        SELECT
+        <include refid="All_Column_List"/>
+        FROM `ted_article`
+        WHERE `aid` = #{aid}
+    </select>
+    <select id="listArticle" resultMap="ArticleMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_article`
+        WHERE 1
+        <if test="categoryIds!=null">
+            AND `category_id` IN
+            <foreach collection="categoryIds" item="categoryId" open="(" separator="," close=")">
+                #{categoryId}
+            </foreach>
+        </if>
+        <if test="status!=null">
+            <if test="status==1">
+                AND `status` = 1
+            </if>
+            <if test="status==10">
+                AND `status` = 0
+            </if>
+        </if>
+        <if test="keywords!=null and keywords!=''">
+            AND (`article_title` LIKE CONCAT('%', #{keywords}, '%') OR `subtitle` LIKE CONCAT('%', #{keywords}, '%')
+            OR `summary` LIKE CONCAT('%', #{keywords}, '%'))
+        </if>
+        <if test="beginTime!=null and endTime!=null and beginTime!='' and endTime!=''">
+            AND (`create_time` <![CDATA[ >= ]]> #{beginTime} AND `create_time` <![CDATA[ <= ]]> #{endTime})
+        </if>
+        <choose>
+            <when test="orderBy!=null and orderBy!=''">
+                ORDER BY ${orderBy}
+            </when>
+            <otherwise>
+                ORDER BY `aid` DESC, `create_time` DESC
+            </otherwise>
+        </choose>
+    </select>
+    <delete id="deleteArticle" parameterType="java.lang.Long">
+        DELETE
+        FROM `ted_article`
+        WHERE `aid` = #{aid}
+    </delete>
+    <delete id="deleteBatchArticle" parameterType="java.lang.String">
+        DELETE
+        FROM `ted_article`
+        WHERE `aid` IN
+        <foreach collection="array" item="aid" open="(" separator="," close=")">
+            #{aid}
+        </foreach>
+    </delete>
+    <!-- 新增 -->
+    <insert id="insertArticle" parameterType="com.ted.entity.Article">
+        INSERT INTO
+        `ted_article`
+        (`category_id`,
+        `article_title`,
+        `subtitle`,
+        `summary`,
+        `keywords`,
+        `recommend`,
+        `photo`,
+        `source`,
+        `author`,
+        `hits`,
+        `status`,
+        `sort`,
+        `seo_title`,
+        `seo_keywords`,
+        `seo_description`,
+        `create_time`
+        )
+        VALUES
+        (#{categoryId},
+        #{articleTitle},
+        #{subtitle},
+        #{summary},
+        #{keywords},
+        #{recommend},
+        #{photo},
+        #{source},
+        #{author},
+        #{hits},
+        #{status},
+        #{sort},
+        #{seoTitle},
+        #{seoKeywords},
+        #{seoDescription},
+        #{createTime}
+        )
+        <selectKey resultType="java.lang.Long" keyProperty="aid" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+    <!-- 修改 -->
+    <update id="updateArticle" parameterType="com.ted.entity.Article">
+        UPDATE
+        `ted_article`
+        <set>
+            <if test="categoryId!=null">`category_id` = #{categoryId},</if>
+            <if test="articleTitle!=null">`article_title` = #{articleTitle},</if>
+            <if test="subtitle!=null">`subtitle` = #{subtitle},</if>
+            <if test="summary!=null">`summary` = #{summary},</if>
+            <if test="keywords!=null">`keywords` = #{keywords},</if>
+            <if test="recommend!=null">`recommend` = #{recommend},</if>
+            <if test="photo!=null">`photo` = #{photo},</if>
+            <if test="source!=null">`source` = #{source},</if>
+            <if test="author!=null">`author` = #{author},</if>
+            <if test="hits!=null">`hits` = #{hits},</if>
+            <if test="status!=null">`status` = #{status},</if>
+            <if test="sort!=null">`sort` = #{sort},</if>
+            <if test="seoTitle!=null">`seo_title` = #{seoTitle},</if>
+            <if test="seoKeywords!=null">`seo_keywords` = #{seoKeywords},</if>
+            <if test="seoDescription!=null">`seo_description` = #{seoDescription},</if>
+            <if test="createTime!=null">`create_time` = #{createTime}</if>
+        </set>
+        WHERE `aid` = #{aid}
+    </update>
+</mapper>

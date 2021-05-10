@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ted.mapper.CategoryMapper">
+    <!-- resultMap最终还是要将结果映射到pojo上，type就是指定映射到哪一个pojo -->
+    <!-- id：设置ResultMap的id -->
+    <resultMap id="CategoryMap" type="com.ted.entity.Category">
+        <!-- 定义主键 ,非常重要。如果是多个字段,则定义多个id -->
+        <!-- property：主键在pojo中的属性名 -->
+        <!-- column：主键在数据库中的列名 -->
+        <id property="categoryId" column="category_id"/>
+
+        <!-- 定义普通属性 -->
+        <result property="categoryName" column="category_name"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="photo" column="photo"/>
+        <result property="description" column="description"/>
+        <result property="sort" column="sort"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        category_id,
+        category_name,
+        parent_id,
+        photo,
+        description,
+        sort,
+        create_time,
+        update_time
+    </sql>
+
+    <select id="getCategory" resultMap="CategoryMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_category`
+        WHERE `category_id` = #{categoryId}
+    </select>
+    <select id="listCategory" resultMap="CategoryMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_category`
+        <where>
+            <if test="parentId!=null and parentId!=''">
+                AND `parent_id` = #{parentId}
+            </if>
+            <if test="keywords!=null and keywords!=''">
+                AND (`category_name` LIKE CONCAT('%', #{keywords}, '%'))
+            </if>
+            <if test="beginTime!=null and endTime!=null and beginTime!='' and endTime!=''">
+                AND (`create_time` <![CDATA[ >= ]]> #{beginTime} AND `create_time` <![CDATA[ <= ]]> #{endTime})
+            </if>
+        </where>
+        <choose>
+            <when test="orderBy!=null and orderBy!=''">
+                ORDER BY ${orderBy}
+            </when>
+            <otherwise>
+                ORDER BY `sort` ASC, `category_id` ASC, `create_time` ASC
+            </otherwise>
+        </choose>
+    </select>
+    <delete id="deleteCategory" parameterType="java.lang.Long">
+        DELETE
+        FROM `ted_category`
+        WHERE `category_id` = #{categoryId}
+    </delete>
+    <delete id="deleteBatchCategory" parameterType="java.lang.String">
+        DELETE
+        FROM `ted_category`
+        WHERE `category_id` IN
+        <foreach collection="array" item="categoryId" open="(" separator="," close=")">
+            #{categoryId}
+        </foreach>
+    </delete>
+    <!-- 新增 -->
+    <insert id="insertCategory" parameterType="com.ted.entity.Category">
+        INSERT INTO
+        `ted_category`
+        (`category_name`,
+        `parent_id`,
+        `photo`,
+        `description`,
+        `sort`,
+        `create_time`
+        )
+        VALUES
+        (#{categoryName},
+        #{parentId},
+        #{photo},
+        #{description},
+        #{sort},
+        #{createTime}
+        )
+        <selectKey resultType="java.lang.Long" keyProperty="categoryId" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+    <!-- 修改 -->
+    <update id="updateCategory" parameterType="com.ted.entity.Category">
+        UPDATE
+        `ted_category`
+        <set>
+            <if test="categoryName!=null">`category_name` = #{categoryName},</if>
+            <if test="parentId!=null">`parent_id` = #{parentId},</if>
+            <if test="photo!=null">`photo` = #{photo},</if>
+            <if test="description!=null">`description` = #{description},</if>
+            <if test="sort!=null">`sort` = #{sort},</if>
+            <if test="createTime!=null">`create_time` = #{createTime}</if>
+        </set>
+        WHERE `category_id` = #{categoryId}
+    </update>
+</mapper>

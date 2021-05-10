@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ted.mapper.ContentMapper">
+    <!-- resultMap最终还是要将结果映射到pojo上，type就是指定映射到哪一个pojo -->
+    <!-- id：设置ResultMap的id -->
+    <resultMap id="ContentMap" type="com.ted.entity.Content">
+        <!-- 定义主键 ,非常重要。如果是多个字段,则定义多个id -->
+        <!-- property：主键在pojo中的属性名 -->
+        <!-- column：主键在数据库中的列名 -->
+        <id property="id" column="id"/>
+
+        <!-- 定义普通属性 -->
+        <result property="tableId" column="table_id"/>
+        <result property="tableName" column="table_name"/>
+        <result property="detail" column="detail"/>
+
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,
+        table_id,
+        table_name,
+        detail
+    </sql>
+
+    <select id="getContent" resultMap="ContentMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_content`
+        WHERE `table_id` = #{tableId} AND `table_name` = #{tableName}
+    </select>
+    <delete id="deleteContent">
+        DELETE
+        FROM `ted_content`
+        WHERE `table_id` = #{tableId}
+          AND `table_name` = #{tableName}
+    </delete>
+    <!-- 新增 -->
+    <insert id="insertContent" parameterType="com.ted.entity.Content">
+        INSERT INTO
+        `ted_content`
+        (`table_id`,
+        `table_name`,
+        `detail`
+        )
+        VALUES
+        (#{tableId},
+        #{tableName},
+        #{detail}
+        )
+        <selectKey resultType="java.lang.Long" keyProperty="id" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+    <!-- 修改 -->
+    <update id="updateContent" parameterType="com.ted.entity.Content">
+        UPDATE
+        `ted_content`
+        <set>
+            <if test="detail!=null">`detail` = #{detail}</if>
+        </set>
+        WHERE `table_id` = #{tableId} AND `table_name` = #{tableName}
+    </update>
+</mapper>

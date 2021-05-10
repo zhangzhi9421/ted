@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ted.mapper.LinkMapper">
+    <!-- resultMap最终还是要将结果映射到pojo上，type就是指定映射到哪一个pojo -->
+    <!-- id：设置ResultMap的id -->
+    <resultMap id="LinkMap" type="com.ted.entity.Link">
+        <!-- 定义主键 ,非常重要。如果是多个字段,则定义多个id -->
+        <!-- property：主键在pojo中的属性名 -->
+        <!-- column：主键在数据库中的列名 -->
+        <id property="linkId" column="link_id"/>
+
+        <!-- 定义普通属性 -->
+        <result property="categoryId" column="category_id"/>
+        <result property="linkTitle" column="link_title"/>
+        <result property="uri" column="uri"/>
+        <result property="photo" column="photo"/>
+        <result property="hits" column="hits"/>
+        <result property="status" column="status"/>
+        <result property="sort" column="sort"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        link_id,
+        category_id,
+        link_title,
+        uri,
+        photo,
+        hits,
+        status,
+        sort,
+        create_time,
+        update_time
+    </sql>
+
+    <select id="getLink" resultMap="LinkMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_link`
+        WHERE `link_id` = #{linkId}
+    </select>
+    <select id="listLink" resultMap="LinkMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_link`
+        WHERE 1
+        <if test="categoryIds!=null">
+            AND `category_id` IN
+            <foreach collection="categoryIds" item="category_id" open="(" separator="," close=")">
+                #{category_id}
+            </foreach>
+        </if>
+        <if test="status!=null">
+            <if test="status==1">
+                AND `status` = 1
+            </if>
+            <if test="status==10">
+                AND `status` = 0
+            </if>
+        </if>
+        <if test="keywords!=null and keywords!=''">
+            AND (`link_title` LIKE CONCAT('%', #{keywords}, '%'))
+        </if>
+        <if test="beginTime!=null and endTime!=null and beginTime!='' and endTime!=''">
+            AND (`create_time` <![CDATA[ >= ]]> #{beginTime} AND `create_time` <![CDATA[ <= ]]> #{endTime})
+        </if>
+        <choose>
+            <when test="orderBy!=null and orderBy!=''">
+                ORDER BY ${orderBy}
+            </when>
+            <otherwise>
+                ORDER BY `link_id` DESC, `create_time` DESC
+            </otherwise>
+        </choose>
+    </select>
+    <delete id="deleteLink" parameterType="java.lang.Long">
+        DELETE
+        FROM `ted_link`
+        WHERE `link_id` = #{linkId}
+    </delete>
+    <delete id="deleteBatchLink" parameterType="java.lang.String">
+        DELETE
+        FROM `ted_link`
+        WHERE `link_id` IN
+        <foreach collection="array" item="linkId" open="(" separator="," close=")">
+            #{linkId}
+        </foreach>
+    </delete>
+    <!-- 新增 -->
+    <insert id="insertLink" parameterType="com.ted.entity.Link">
+        INSERT INTO
+        `ted_link`
+        (`category_id`,
+        `link_title`,
+        `uri`,
+        `photo`,
+        `hits`,
+        `status`,
+        `sort`,
+        `create_time`
+        )
+        VALUES
+        (#{categoryId},
+        #{linkTitle},
+        #{uri},
+        #{photo},
+        #{hits},
+        #{status},
+        #{sort},
+        #{createTime}
+        )
+        <selectKey resultType="java.lang.Long" keyProperty="linkId" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+    <!-- 修改 -->
+    <update id="updateLink" parameterType="com.ted.entity.Link">
+        UPDATE
+        `ted_link`
+        <set>
+            <if test="categoryId!=null">`category_id` = #{categoryId},</if>
+            <if test="linkTitle!=null">`link_title` = #{linkTitle},</if>
+            <if test="uri!=null">`uri` = #{uri},</if>
+            <if test="photo!=null">`photo` = #{photo},</if>
+            <if test="hits!=null">`hits` = #{hits},</if>
+            <if test="status!=null">`status` = #{status},</if>
+            <if test="sort!=null">`sort` = #{sort},</if>
+            <if test="createTime!=null">`create_time` = #{createTime}</if>
+        </set>
+        WHERE `link_id` = #{linkId}
+    </update>
+</mapper>

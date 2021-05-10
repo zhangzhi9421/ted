@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ted.mapper.AdminMapper">
+    <!-- resultMap最终还是要将结果映射到pojo上，type就是指定映射到哪一个pojo -->
+    <!-- id：设置ResultMap的id -->
+    <resultMap id="AdminMap" type="com.ted.entity.Admin">
+        <!-- 定义主键 ,非常重要。如果是多个字段,则定义多个id -->
+        <!-- property：主键在pojo中的属性名 -->
+        <!-- column：主键在数据库中的列名 -->
+        <id property="uid" column="uid"/>
+
+        <!-- 定义普通属性 -->
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="nickname" column="nickname"/>
+        <result property="realName" column="real_name"/>
+        <result property="profile" column="profile"/>
+        <result property="gender" column="gender"/>
+        <result property="phone" column="phone"/>
+        <result property="status" column="status"/>
+        <result property="token" column="token"/>
+        <result property="validTime" column="valid_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        uid,
+        username,
+        password,
+        nickname,
+        real_name,
+        profile,
+        gender,
+        phone,
+        status,
+        token,
+        valid_time,
+        create_time,
+        update_time
+    </sql>
+
+    <select id="getAdmin" resultMap="AdminMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_admin`
+        WHERE `uid` = #{uid}
+    </select>
+    <select id="getAdminByUsername" resultMap="AdminMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_admin`
+        WHERE `username` = #{username}
+    </select>
+    <select id="getAdminByUsernameNotUid" resultMap="AdminMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_admin`
+        WHERE `username` = #{username} AND `uid` != #{uid}
+    </select>
+    <select id="getAdminByToken" resultMap="AdminMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_admin`
+        WHERE `token` = #{token}
+    </select>
+    <select id="listAdmin" resultMap="AdminMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_admin`
+        <where>
+            <if test="status!=null">
+                <if test="status==1">
+                    AND `status` = 1
+                </if>
+                <if test="status==10">
+                    AND `status` = 0
+                </if>
+            </if>
+            <if test="keywords!=null and keywords!=''">
+                AND (`username` LIKE CONCAT('%', #{keywords}, '%') OR `nickname` LIKE CONCAT('%', #{keywords}, '%'))
+            </if>
+            <if test="beginTime!=null and endTime!=null and beginTime!='' and endTime!=''">
+                AND (`create_time` <![CDATA[ >= ]]> #{beginTime} AND `create_time` <![CDATA[ <= ]]> #{endTime})
+            </if>
+        </where>
+        <choose>
+            <when test="orderBy!=null and orderBy!=''">
+                ORDER BY ${orderBy}
+            </when>
+            <otherwise>
+                ORDER BY `uid` DESC, `create_time` DESC
+            </otherwise>
+        </choose>
+    </select>
+    <delete id="deleteAdmin" parameterType="java.math.BigInteger">
+        DELETE
+        FROM `ted_admin`
+        WHERE `uid` = #{uid}
+    </delete>
+    <delete id="deleteBatchAdmin" parameterType="java.lang.String">
+        DELETE
+        FROM `ted_admin`
+        WHERE `uid` IN
+        <foreach collection="array" item="uid" open="(" separator="," close=")">
+            #{uid}
+        </foreach>
+    </delete>
+    <!-- 新增 -->
+    <insert id="insertAdmin" parameterType="com.ted.entity.Admin">
+        INSERT INTO
+        `ted_admin`
+        (`username`,
+        `password`,
+        `nickname`,
+        `real_name`,
+        `profile`,
+        `gender`,
+        `phone`,
+        `status`,
+        `create_time`
+        )
+        VALUES
+        (#{username},
+        #{password},
+        #{nickname},
+        #{realName},
+        #{profile},
+        #{gender},
+        #{phone},
+        #{status},
+        #{createTime}
+        )
+        <selectKey resultType="java.math.BigInteger" keyProperty="uid" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+    <!-- 修改 -->
+    <update id="updateAdmin" parameterType="com.ted.entity.Admin">
+        UPDATE
+        `ted_admin`
+        <set>
+            <if test="username!=null">`username` = #{username},</if>
+            <if test="password!=null">`password` = #{password},</if>
+            <if test="nickname!=null">`nickname` = #{nickname},</if>
+            <if test="realName!=null">`real_name` = #{realName},</if>
+            <if test="profile!=null">`profile` = #{profile},</if>
+            <if test="gender!=null">`gender` = #{gender},</if>
+            <if test="phone!=null">`phone` = #{phone},</if>
+            <if test="status!=null">`status` = #{status},</if>
+            <if test="token!=null">`token` = #{token},</if>
+            <if test="validTime!=null">`valid_time` = #{validTime},</if>
+            <if test="createTime!=null">`create_time` = #{createTime}</if>
+        </set>
+        WHERE `uid` = #{uid}
+    </update>
+</mapper>

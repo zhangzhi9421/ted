@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ted.mapper.AttachmentMapper">
+    <!-- resultMap最终还是要将结果映射到pojo上，type就是指定映射到哪一个pojo -->
+    <!-- id：设置ResultMap的id -->
+    <resultMap id="AttachmentMap" type="com.ted.entity.Attachment">
+        <!-- 定义主键 ,非常重要。如果是多个字段,则定义多个id -->
+        <!-- property：主键在pojo中的属性名 -->
+        <!-- column：主键在数据库中的列名 -->
+        <id property="fileId" column="file_id"/>
+
+        <!-- 定义普通属性 -->
+        <result property="fileName" column="file_name"/>
+        <result property="fileSize" column="file_size"/>
+        <result property="filePath" column="file_path"/>
+        <result property="fileType" column="file_type"/>
+        <result property="tableId" column="table_id"/>
+        <result property="tableName" column="table_name"/>
+        <result property="tableField" column="table_field"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        file_id,
+        file_name,
+        file_size,
+        file_path,
+        file_type,
+        table_id,
+        table_name,
+        table_field,
+        status,
+        create_time,
+        update_time
+    </sql>
+
+    <select id="getAttachment" resultMap="AttachmentMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_attachment`
+        WHERE `file_id` = #{file_id}
+    </select>
+    <select id="listAttachment" resultMap="AttachmentMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `ted_attachment`
+        <where>
+            <if test="status!=null">
+                <if test="status==1">
+                    AND `status` = 1
+                </if>
+                <if test="status==10">
+                    AND `status` = 0
+                </if>
+            </if>
+            <if test="tableId!=null and tableId!=''">
+                AND `table_id` = #{tableId}
+            </if>
+            <if test="tableName!=null and tableName!=''">
+                AND `table_name` = #{tableName}
+            </if>
+            <if test="tableField!=null and tableField!=''">
+                AND `table_field` = #{tableField}
+            </if>
+            <if test="keywords!=null and keywords!=''">
+                AND (`file_name` LIKE CONCAT('%', #{keywords}, '%'))
+            </if>
+            <if test="beginTime!=null and endTime!=null and beginTime!='' and endTime!=''">
+                AND (`create_time` <![CDATA[ >= ]]> #{beginTime} AND `create_time` <![CDATA[ <= ]]> #{endTime})
+            </if>
+        </where>
+        <choose>
+            <when test="orderBy!=null and orderBy!=''">
+                ORDER BY ${orderBy}
+            </when>
+            <otherwise>
+                ORDER BY `file_id` DESC, `create_time` DESC
+            </otherwise>
+        </choose>
+    </select>
+    <delete id="deleteAttachment" parameterType="java.math.BigInteger">
+        DELETE
+        FROM `ted_attachment`
+        WHERE `file_id` = #{file_id}
+    </delete>
+    <delete id="deleteBatchAttachment" parameterType="java.lang.String">
+        DELETE
+        FROM `ted_attachment`
+        WHERE `file_id` IN
+        <foreach collection="array" item="file_id" open="(" separator="," close=")">
+            #{file_id}
+        </foreach>
+    </delete>
+    <!-- 新增 -->
+    <insert id="insertAttachment" parameterType="com.ted.entity.Attachment">
+        INSERT INTO
+        `ted_attachment`
+        (
+        `file_name`,
+        `file_size`,
+        `file_path`,
+        `file_type`,
+        `table_id`,
+        `table_name`,
+        `table_field`,
+        `status`,
+        `create_time`
+        )
+        VALUES
+        (#{fileName},
+        #{fileSize},
+        #{filePath},
+        #{fileType},
+        #{tableId},
+        #{tableName},
+        #{tableField},
+        #{status},
+        #{createTime}
+        )
+        <selectKey resultType="java.math.BigInteger" keyProperty="fileId" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+    <!-- 修改 -->
+    <update id="updateAttachment" parameterType="com.ted.entity.Attachment">
+        UPDATE
+        `ted_attachment`
+        <set>
+            <if test="fileName!=null">`file_name` = #{fileName},</if>
+            <if test="fileSize!=null">`file_size` = #{fileSize},</if>
+            <if test="filePath!=null">`file_path` = #{filePath},</if>
+            <if test="fileType!=null">`file_type` = #{fileType},</if>
+            <if test="tableId!=null">`table_id` = #{tableId},</if>
+            <if test="tableName!=null">`table_name` = #{tableName},</if>
+            <if test="tableField!=null">`table_field` = #{tableField},</if>
+            <if test="status!=null">`status` = #{status},</if>
+            <if test="createTime!=null">`create_time` = #{createTime}</if>
+        </set>
+        WHERE `file_id` = #{file_id}
+    </update>
+    <update id="disableAttachment" parameterType="java.lang.String">
+        UPDATE
+        `ted_attachment`
+        <set>
+            `status` = 1,
+            <if test="tableId!=null">`table_id` = #{tableId},</if>
+            <if test="tableName!=null">`table_name` = #{tableName},</if>
+            <if test="tableField!=null">`table_field` = #{tableField}</if>
+        </set>
+        WHERE file_id IN
+        <foreach collection="array" item="file_id" open="(" separator="," close=")">
+            #{file_id}
+        </foreach>
+    </update>
+    <update id="disableAttachmentExclude" parameterType="java.lang.String">
+        UPDATE
+        `ted_attachment`
+        SET
+        `status` = 0
+        WHERE 1
+        <if test="array!=null">
+            AND file_id NOT IN
+            <foreach collection="array" item="file_id" open="(" separator="," close=")">
+                #{file_id}
+            </foreach>
+        </if>
+        <choose>
+            <when test="tableId!=null and tableId!=''">
+                AND table_id = #{tableId}
+            </when>
+            <when test="tableName!=null and tableName!=''">
+                AND table_name = #{tableName}
+            </when>
+            <when test="tableField!=null and tableField!=''">
+                AND table_field = #{tableField}
+            </when>
+        </choose>
+    </update>
+</mapper>
